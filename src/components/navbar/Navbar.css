@@ -87,6 +87,11 @@
     background-color: #ffffff;
 }
 
+.header-container button:hover {
+    background-color: #0056b3;
+    transition: background-color 0.3s ease;
+}
+
 @media (max-width: 768px) {
     .hamburger {
         display: block;
@@ -140,6 +145,11 @@
 
     .header-container {
         padding: 0 1rem;
+    }
+
+    .header-container button {
+        margin: 10px 0;
+        width: 100%;
     }
 }
 

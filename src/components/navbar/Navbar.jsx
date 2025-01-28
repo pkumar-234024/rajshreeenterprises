@@ -1,12 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleAdminClick = () => {
+    navigate("/admin");
+    setIsMenuOpen(false);
   };
 
   return (
@@ -50,13 +56,22 @@ const Navbar = () => {
                 Contact
               </Link>
             </li>
-            <li>
-              <Link to="/admin" onClick={toggleMenu}>
-                Admin
-              </Link>
-            </li>
           </ul>
         </nav>
+        <button
+          onClick={handleAdminClick}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginLeft: "15px",
+          }}
+        >
+          Admin Panel
+        </button>
       </div>
     </header>
   );
