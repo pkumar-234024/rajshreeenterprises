@@ -15,11 +15,12 @@ import {
   getProductById,
 } from "../../data/productData";
 import { galleryData } from "../../data/galleryData";
-import { 
-    getProductImages, 
-    addProductImage, 
-    deleteProductImage as deleteProductImageApi 
+import {
+  getProductImages,
+  addProductImage,
+  deleteProductImage as deleteProductImageApi,
 } from "../../data/productImagesData";
+import Loader from "../common/Loader";
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState("category");
@@ -32,6 +33,9 @@ const AdminPanel = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productImages, setProductImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [adminData, setAdminData] = useState(null);
+  const [tabLoading, setTabLoading] = useState(false);
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -57,14 +61,14 @@ const AdminPanel = () => {
           const categoriesData = await getAllCategories();
           setCategories(categoriesData);
         } catch (error) {
-          console.error('Error fetching categories:', error);
+          console.error("Error fetching categories:", error);
           setCategories(categoryData());
         } finally {
           setLoading(false);
         }
       }
     };
-    
+
     fetchCategories();
   }, [activeTab]);
 
@@ -79,7 +83,7 @@ const AdminPanel = () => {
           const productsData = await getAllProducts(firstCategoryId);
           setProducts(productsData);
         } catch (error) {
-          console.error('Error fetching products:', error);
+          console.error("Error fetching products:", error);
           setProducts([]);
         } finally {
           setLoading(false);
@@ -99,7 +103,7 @@ const AdminPanel = () => {
           const images = await getProductImages(selectedProduct.id);
           setProductImages(images);
         } catch (error) {
-          console.error('Error loading product images:', error);
+          console.error("Error loading product images:", error);
           setProductImages([]);
         } finally {
           setLoading(false);
@@ -109,6 +113,31 @@ const AdminPanel = () => {
 
     fetchProductImages();
   }, [activeTab, selectedProduct]);
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        setIsLoading(true);
+        // Your API call here
+        // const response = await fetch('your-api-endpoint/admin-data');
+        // const data = await response.json();
+        // setAdminData(data);
+
+        // Simulating API call with timeout
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   // Category handlers
   const handleCategorySubmit = (e) => {
@@ -132,17 +161,17 @@ const AdminPanel = () => {
         } else {
           await createCategory(categoryData);
         }
-        
+
         // Refresh categories list
         const updatedCategories = await getAllCategories();
         setCategories(updatedCategories);
-        
+
         setShowCategoryForm(false);
         setEditingCategory(null);
         setCategoryForm({ name: "", description: "", image: null });
       } catch (error) {
-        console.error('Error submitting category:', error);
-        alert('Failed to save category. Please try again.');
+        console.error("Error submitting category:", error);
+        alert("Failed to save category. Please try again.");
       }
     };
 
@@ -167,48 +196,48 @@ const AdminPanel = () => {
   const handleProductSubmit = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.category) {
-        alert("Product name and category are required!");
-        return;
+      alert("Product name and category are required!");
+      return;
     }
 
     try {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const productData = {
-                name: productForm.name,
-                description: productForm.description,
-                image: reader.result,
-                categoryId: parseInt(productForm.category)
-            };
-
-            if (editingProduct) {
-                await updateProduct(editingProduct.id, productData);
-            } else {
-                await createProduct(productData);
-            }
-
-            // Refresh products list
-            const updatedProducts = await getAllProducts(productForm.category);
-            setProducts(updatedProducts);
-            
-            setShowProductForm(false);
-            setEditingProduct(null);
-            setProductForm({
-                name: "",
-                description: "",
-                category: "",
-                image: null
-            });
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const productData = {
+          name: productForm.name,
+          description: productForm.description,
+          image: reader.result,
+          categoryId: parseInt(productForm.category),
         };
 
-        if (productForm.image instanceof File) {
-            reader.readAsDataURL(productForm.image);
+        if (editingProduct) {
+          await updateProduct(editingProduct.id, productData);
         } else {
-            reader.onloadend();
+          await createProduct(productData);
         }
+
+        // Refresh products list
+        const updatedProducts = await getAllProducts(productForm.category);
+        setProducts(updatedProducts);
+
+        setShowProductForm(false);
+        setEditingProduct(null);
+        setProductForm({
+          name: "",
+          description: "",
+          category: "",
+          image: null,
+        });
+      };
+
+      if (productForm.image instanceof File) {
+        reader.readAsDataURL(productForm.image);
+      } else {
+        reader.onloadend();
+      }
     } catch (error) {
-        console.error('Error submitting product:', error);
-        alert('Failed to save product. Please try again.');
+      console.error("Error submitting product:", error);
+      alert("Failed to save product. Please try again.");
     }
   };
 
@@ -225,32 +254,32 @@ const AdminPanel = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-        try {
-            await deleteProduct(id);
-            // After successful deletion, refresh the products list
-            const updatedProducts = await getAllProducts(categoryId);
-            setProducts(updatedProducts);
-            alert('Product deleted successfully');
-        } catch (error) {
-            console.error('Error deleting product:', error);
-            alert('Failed to delete product. Please try again.');
-        }
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await deleteProduct(id);
+        // After successful deletion, refresh the products list
+        const updatedProducts = await getAllProducts(categoryId);
+        setProducts(updatedProducts);
+        alert("Product deleted successfully");
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        alert("Failed to delete product. Please try again.");
+      }
     }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-        try {
-            await deleteCategory(id);
-            // After successful deletion, refresh the categories list
-            const updatedCategories = await getAllCategories();
-            setCategories(updatedCategories);
-            alert('Category deleted successfully');
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            alert('Failed to delete category. Please try again.');
-        }
+    if (window.confirm("Are you sure you want to delete this category?")) {
+      try {
+        await deleteCategory(id);
+        // After successful deletion, refresh the categories list
+        const updatedCategories = await getAllCategories();
+        setCategories(updatedCategories);
+        alert("Category deleted successfully");
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        alert("Failed to delete category. Please try again.");
+      }
     }
   };
 
@@ -266,7 +295,7 @@ const AdminPanel = () => {
 
   const handleAdditionalImagesUpload = async (e) => {
     const files = Array.from(e.target.files);
-    
+
     if (!selectedProduct || files.length === 0) {
       alert("Please select a product and images first!");
       return;
@@ -279,7 +308,7 @@ const AdminPanel = () => {
           try {
             await addProductImage(selectedProduct.id, reader.result);
           } catch (error) {
-            console.error('Error adding image:', error);
+            console.error("Error adding image:", error);
             alert(`Failed to add image: ${file.name}`);
           }
         };
@@ -289,42 +318,58 @@ const AdminPanel = () => {
       // Refresh the images list
       const updatedImages = await getProductImages(selectedProduct.id);
       setProductImages(updatedImages);
-      
+
       // Clear the file input
-      e.target.value = '';
-      alert('Images added successfully!');
+      e.target.value = "";
+      alert("Images added successfully!");
     } catch (error) {
-      console.error('Error processing images:', error);
-      alert('Error processing images. Please try again.');
+      console.error("Error processing images:", error);
+      alert("Error processing images. Please try again.");
     }
   };
 
   const handleDeleteProductImage = async (imageId) => {
-    if (window.confirm('Are you sure you want to delete this image?')) {
+    if (window.confirm("Are you sure you want to delete this image?")) {
       try {
         await deleteProductImageApi(imageId);
         // Refresh the images list
         const updatedImages = await getProductImages(selectedProduct.id);
         setProductImages(updatedImages);
-        alert('Image deleted successfully');
+        alert("Image deleted successfully");
       } catch (error) {
-        console.error('Error deleting image:', error);
-        alert('Failed to delete image. Please try again.');
+        console.error("Error deleting image:", error);
+        alert("Failed to delete image. Please try again.");
       }
     }
   };
 
-  // Update the tab change handler to clear unnecessary data
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    // Clear data when switching tabs
-    if (tab === "category") {
-      setProducts([]);
-      setProductImages([]);
-      setSelectedProduct(null);
-    } else if (tab === "product") {
-      setProductImages([]);
-      setSelectedProduct(null);
+  // Update the tab change handler
+  const handleTabChange = async (tab) => {
+    try {
+      setTabLoading(true);
+      setActiveTab(tab);
+
+      // Clear data when switching tabs
+      if (tab === "category") {
+        setProducts([]);
+        setProductImages([]);
+        setSelectedProduct(null);
+        const categoriesData = await getAllCategories();
+        setCategories(categoriesData);
+      } else if (tab === "product") {
+        setProductImages([]);
+        setSelectedProduct(null);
+        if (categories.length > 0) {
+          const productsData = await getAllProducts(categories[0].id);
+          setProducts(productsData);
+        }
+      } else if (tab === "gallery") {
+        // Load initial gallery data if needed
+      }
+    } catch (error) {
+      console.error("Error switching tabs:", error);
+    } finally {
+      setTabLoading(false);
     }
   };
 
@@ -335,7 +380,7 @@ const AdminPanel = () => {
       setProducts(productsData);
       setSelectedCategory(categoryId);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -366,13 +411,13 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-content">
-        {loading && <div className="loading">Loading...</div>}
-        
+        {(loading || tabLoading) && <Loader />}
+
         {activeTab === "category" && (
           <div className="category-management">
             <div className="category-header">
               <h2>Categories</h2>
-              <button 
+              <button
                 className="add-btn"
                 onClick={() => {
                   setEditingCategory(null);
@@ -387,9 +432,9 @@ const AdminPanel = () => {
             <div className="items-list">
               {categories.map((category) => (
                 <div key={`category-${category.id}`} className="item-card">
-                  <img 
-                    src={category.image} 
-                    alt={category.name} 
+                  <img
+                    src={category.image}
+                    alt={category.name}
                     className="item-thumbnail"
                   />
                   <div className="item-info">
@@ -419,16 +464,18 @@ const AdminPanel = () => {
                 <div className="modal-content">
                   <form onSubmit={handleCategorySubmit} className="admin-form">
                     <div className="modal-header">
-                      <h2>{editingCategory ? 'Edit Category' : 'Create Category'}</h2>
-                      <button 
-                        type="button" 
+                      <h2>
+                        {editingCategory ? "Edit Category" : "Create Category"}
+                      </h2>
+                      <button
+                        type="button"
                         className="close-btn"
                         onClick={() => setShowCategoryForm(false)}
                       >
                         ×
                       </button>
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="categoryName">Category Name *</label>
                       <input
@@ -438,7 +485,10 @@ const AdminPanel = () => {
                         value={categoryForm.name}
                         required
                         onChange={(e) =>
-                          setCategoryForm({ ...categoryForm, name: e.target.value })
+                          setCategoryForm({
+                            ...categoryForm,
+                            name: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -455,7 +505,11 @@ const AdminPanel = () => {
                       {categoryForm.image && (
                         <div className="image-preview single-preview">
                           <img
-                            src={categoryForm.image instanceof File ? URL.createObjectURL(categoryForm.image) : categoryForm.image}
+                            src={
+                              categoryForm.image instanceof File
+                                ? URL.createObjectURL(categoryForm.image)
+                                : categoryForm.image
+                            }
                             alt="Category preview"
                           />
                         </div>
@@ -463,7 +517,9 @@ const AdminPanel = () => {
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="categoryDescription">Category Description</label>
+                      <label htmlFor="categoryDescription">
+                        Category Description
+                      </label>
                       <textarea
                         id="categoryDescription"
                         placeholder="Category Description"
@@ -479,10 +535,12 @@ const AdminPanel = () => {
 
                     <div className="form-actions">
                       <button type="submit">
-                        {editingCategory ? 'Update Category' : 'Create Category'}
+                        {editingCategory
+                          ? "Update Category"
+                          : "Create Category"}
                       </button>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowCategoryForm(false)}
                         className="cancel-btn"
                       >
@@ -500,7 +558,7 @@ const AdminPanel = () => {
           <div className="product-management">
             <div className="product-header">
               <h2>Products</h2>
-              <button 
+              <button
                 className="add-btn"
                 onClick={() => {
                   setEditingProduct(null);
@@ -520,7 +578,7 @@ const AdminPanel = () => {
 
             <div className="product-filters">
               <select
-                value={selectedCategory || ''}
+                value={selectedCategory || ""}
                 onChange={(e) => handleCategoryChange(e.target.value)}
               >
                 <option value="">Select Category</option>
@@ -536,9 +594,9 @@ const AdminPanel = () => {
               {products.map((product) => (
                 <div key={`product-${product.id}`} className="item-card">
                   <div className="item-images">
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
+                    <img
+                      src={product.image}
+                      alt={product.name}
                       className="item-thumbnail"
                     />
                   </div>
@@ -546,7 +604,9 @@ const AdminPanel = () => {
                     <h3>{product.name}</h3>
                     <p>{product.description}</p>
                     <p className="category">
-                      Category: {categories.find(cat => cat.id === product.categoryId)?.name || 'Unknown'}
+                      Category:{" "}
+                      {categories.find((cat) => cat.id === product.categoryId)
+                        ?.name || "Unknown"}
                     </p>
                   </div>
                   <div className="item-actions">
@@ -572,16 +632,18 @@ const AdminPanel = () => {
                 <div className="modal-content">
                   <form onSubmit={handleProductSubmit} className="admin-form">
                     <div className="modal-header">
-                      <h2>{editingProduct ? 'Edit Product' : 'Create Product'}</h2>
-                      <button 
-                        type="button" 
+                      <h2>
+                        {editingProduct ? "Edit Product" : "Create Product"}
+                      </h2>
+                      <button
+                        type="button"
                         className="close-btn"
                         onClick={() => setShowProductForm(false)}
                       >
                         ×
                       </button>
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="productName">Product Name *</label>
                       <input
@@ -591,7 +653,10 @@ const AdminPanel = () => {
                         value={productForm.name}
                         required
                         onChange={(e) =>
-                          setProductForm({ ...productForm, name: e.target.value })
+                          setProductForm({
+                            ...productForm,
+                            name: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -603,7 +668,10 @@ const AdminPanel = () => {
                         placeholder="Product Description"
                         value={productForm.description}
                         onChange={(e) =>
-                          setProductForm({ ...productForm, description: e.target.value })
+                          setProductForm({
+                            ...productForm,
+                            description: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -618,7 +686,10 @@ const AdminPanel = () => {
                         value={productForm.price}
                         required
                         onChange={(e) =>
-                          setProductForm({ ...productForm, price: e.target.value })
+                          setProductForm({
+                            ...productForm,
+                            price: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -630,12 +701,18 @@ const AdminPanel = () => {
                         value={productForm.category}
                         required
                         onChange={(e) =>
-                          setProductForm({ ...productForm, category: e.target.value })
+                          setProductForm({
+                            ...productForm,
+                            category: e.target.value,
+                          })
                         }
                       >
                         <option value="">Select Category</option>
                         {categories.map((category) => (
-                          <option key={`category-${category.id}`} value={category.id}>
+                          <option
+                            key={`category-${category.id}`}
+                            value={category.id}
+                          >
                             {category.name}
                           </option>
                         ))}
@@ -654,7 +731,11 @@ const AdminPanel = () => {
                         <div className="image-preview">
                           <div className="preview-item">
                             <img
-                              src={productForm.image instanceof File ? URL.createObjectURL(productForm.image) : productForm.image}
+                              src={
+                                productForm.image instanceof File
+                                  ? URL.createObjectURL(productForm.image)
+                                  : productForm.image
+                              }
                               alt="Product preview"
                             />
                           </div>
@@ -664,10 +745,10 @@ const AdminPanel = () => {
 
                     <div className="form-actions">
                       <button type="submit">
-                        {editingProduct ? 'Update Product' : 'Create Product'}
+                        {editingProduct ? "Update Product" : "Create Product"}
                       </button>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowProductForm(false)}
                         className="cancel-btn"
                       >
@@ -684,14 +765,16 @@ const AdminPanel = () => {
         {activeTab === "gallery" && (
           <div className="gallery-management">
             <h2>Product Gallery Management</h2>
-            
+
             <div className="product-selector">
               <label htmlFor="productSelect">Select Product:</label>
               <select
                 id="productSelect"
                 value={selectedProduct?.id || ""}
                 onChange={(e) => {
-                  const product = products.find(p => p.id === parseInt(e.target.value));
+                  const product = products.find(
+                    (p) => p.id === parseInt(e.target.value)
+                  );
                   setSelectedProduct(product);
                 }}
               >
@@ -738,7 +821,9 @@ const AdminPanel = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="no-images">No images available for this product</p>
+                    <p className="no-images">
+                      No images available for this product
+                    </p>
                   )}
                 </div>
               </div>

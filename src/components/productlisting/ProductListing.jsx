@@ -4,6 +4,7 @@ import { getAllProducts, getProductById } from "../../data/productData";
 import { getAllCategories, getCategoryById } from "../../data/categoryData";
 import "./ProductListing.css";
 import ImageCard from "../imagecard/ImageCard";
+import Loader from "../common/Loader";
 
 const ProductListing = () => {
   const { categoryId } = useParams();
@@ -12,10 +13,12 @@ const ProductListing = () => {
   const [categoryName, setCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setIsLoading(true);
         setLoading(true);
         setError(null);
 
@@ -32,11 +35,12 @@ const ProductListing = () => {
           setProducts([]);
         }
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error("Error loading products:", error);
         setError("Failed to load products. Please try again later.");
         setProducts([]);
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -44,6 +48,10 @@ const ProductListing = () => {
       loadProducts();
     }
   }, [categoryId]);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   if (loading) {
     return (

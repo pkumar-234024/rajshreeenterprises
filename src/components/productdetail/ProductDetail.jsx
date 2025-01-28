@@ -1,20 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { productData } from "../../data/productData";
 import { galleryData } from "../../data/galleryData";
 import "./ProductDetail.css";
+import Loader from "../common/Loader";
 
 const ProductDetail = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState();
+  const [isLoading, setIsLoading] = useState(true);
+  const [product, setProduct] = useState(null);
 
-  const product = productData.find((p) => p.id === parseInt(productId));
   const galleryImages = galleryData.filter(
     (img) => img.productId === parseInt(productId)
   );
   console.log(galleryImages);
+
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        setIsLoading(true);
+        // Your API call here
+        // const response = await fetch(`your-api-endpoint/product/${productId}`);
+        // const data = await response.json();
+        // setProduct(data);
+
+        // Simulating API call with timeout
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [productId]);
 
   const handlePrevImage = () => {
     setSelectedImage((prev) =>
@@ -38,6 +61,10 @@ const ProductDetail = () => {
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
   });
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   if (!product) {
     return (
