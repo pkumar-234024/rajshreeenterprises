@@ -65,9 +65,7 @@ export const createCategory = async (categoryData) => {
 
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: API_HEADERS,
             body: JSON.stringify(dataToSend),
         });
 
@@ -117,6 +115,7 @@ export const updateCategory = async (id, categoryData) => {
 // Delete a category
 export const deleteCategory = async (id) => {
     try {
+        console.log(`${API_URL}/${id}`);
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
             headers: {

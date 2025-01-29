@@ -36,6 +36,7 @@ const AdminPanel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [adminData, setAdminData] = useState(null);
   const [tabLoading, setTabLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -140,7 +141,7 @@ const AdminPanel = () => {
   }
 
   // Category handlers
-  const handleCategorySubmit = (e) => {
+  const handleCategorySubmit = async (e) => {
     e.preventDefault();
     if (!categoryForm.name) {
       alert("Category name is required!");
@@ -149,28 +150,45 @@ const AdminPanel = () => {
 
     const submitData = async (imageData) => {
       try {
+        setActionLoading(true);
         const categoryData = {
           name: categoryForm.name,
           description: categoryForm.description,
           image: imageData,
         };
 
+        let response;
         if (editingCategory) {
-          await updateCategory(editingCategory.id, categoryData);
+          response = await updateCategory(editingCategory.id, categoryData);
         } else {
-          await createCategory(categoryData);
+          response = await createCategory(categoryData);
         }
 
-        // Refresh categories list
-        const updatedCategories = await getAllCategories();
-        setCategories(updatedCategories);
+        if (response) {
+          // Refresh categories list
+          const updatedCategories = await getAllCategories();
+          setCategories(updatedCategories);
 
-        setShowCategoryForm(false);
-        setEditingCategory(null);
-        setCategoryForm({ name: "", description: "", image: null });
+          setShowCategoryForm(false);
+          setEditingCategory(null);
+          setCategoryForm({ name: "", description: "", image: null });
+          alert(
+            editingCategory
+              ? "Category updated successfully"
+              : "Category created successfully"
+          );
+        } else {
+          throw new Error("Failed to save category");
+        }
       } catch (error) {
         console.error("Error submitting category:", error);
-        alert("Failed to save category. Please try again.");
+        alert(
+          `Failed to ${
+            editingCategory ? "update" : "create"
+          } category. Please try again.`
+        );
+      } finally {
+        setActionLoading(false);
       }
     };
 
@@ -209,36 +227,53 @@ const AdminPanel = () => {
 
     const submitProduct = async (imageData) => {
       try {
+        setActionLoading(true);
         const productData = {
           name: productForm.name,
           description: productForm.description,
-          price: productForm.price,
+          price: parseFloat(productForm.price),
           image: imageData,
           categoryId: parseInt(productForm.category),
         };
 
+        let response;
         if (editingProduct) {
-          await updateProduct(editingProduct.id, productData);
+          response = await updateProduct(editingProduct.id, productData);
         } else {
-          await createProduct(productData);
+          response = await createProduct(productData);
         }
 
-        // Refresh products list
-        const updatedProducts = await getAllProducts(productForm.category);
-        setProducts(updatedProducts);
+        if (response) {
+          // Refresh products list
+          const updatedProducts = await getAllProducts(productData.categoryId);
+          setProducts(updatedProducts);
 
-        setShowProductForm(false);
-        setEditingProduct(null);
-        setProductForm({
-          name: "",
-          description: "",
-          category: "",
-          price: "",
-          image: null,
-        });
+          setShowProductForm(false);
+          setEditingProduct(null);
+          setProductForm({
+            name: "",
+            description: "",
+            category: "",
+            price: "",
+            image: null,
+          });
+          alert(
+            editingProduct
+              ? "Product updated successfully"
+              : "Product created successfully"
+          );
+        } else {
+          throw new Error("Failed to save product");
+        }
       } catch (error) {
         console.error("Error submitting product:", error);
-        alert("Failed to save product. Please try again.");
+        alert(
+          `Failed to ${
+            editingProduct ? "update" : "create"
+          } product. Please try again.`
+        );
+      } finally {
+        setActionLoading(false);
       }
     };
 
@@ -272,14 +307,27 @@ const AdminPanel = () => {
   const handleDeleteProduct = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
+        setActionLoading(true);
+
+        // Get the current category ID before deleting the product
+        const currentCategoryId =
+          selectedCategory || products.find((p) => p.id === id)?.categoryId;
+
+        if (!currentCategoryId) {
+          throw new Error("Category ID not found");
+        }
+
         await deleteProduct(id);
+
         // After successful deletion, refresh the products list
-        const updatedProducts = await getAllProducts(categoryId);
+        const updatedProducts = await getAllProducts(currentCategoryId);
         setProducts(updatedProducts);
         alert("Product deleted successfully");
       } catch (error) {
         console.error("Error deleting product:", error);
         alert("Failed to delete product. Please try again.");
+      } finally {
+        setActionLoading(false);
       }
     }
   };
@@ -287,6 +335,7 @@ const AdminPanel = () => {
   const handleDeleteCategory = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
+        setActionLoading(true);
         await deleteCategory(id);
         // After successful deletion, refresh the categories list
         const updatedCategories = await getAllCategories();
@@ -295,6 +344,8 @@ const AdminPanel = () => {
       } catch (error) {
         console.error("Error deleting category:", error);
         alert("Failed to delete category. Please try again.");
+      } finally {
+        setActionLoading(false);
       }
     }
   };
@@ -354,6 +405,7 @@ const AdminPanel = () => {
   const handleDeleteProductImage = async (imageId) => {
     if (window.confirm("Are you sure you want to delete this image?")) {
       try {
+        setActionLoading(true);
         await deleteProductImageApi(imageId);
         // Refresh the images list
         const updatedImages = await getProductImages(selectedProduct.id);
@@ -362,6 +414,8 @@ const AdminPanel = () => {
       } catch (error) {
         console.error("Error deleting image:", error);
         alert("Failed to delete image. Please try again.");
+      } finally {
+        setActionLoading(false);
       }
     }
   };
@@ -434,7 +488,7 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-content">
-        {(loading || tabLoading) && <Loader />}
+        {(loading || tabLoading || actionLoading) && <Loader />}
 
         {activeTab === "category" && (
           <div className="category-management">

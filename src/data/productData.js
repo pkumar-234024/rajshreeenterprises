@@ -96,7 +96,7 @@ export const deleteProduct = async (id) => {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
+                'accept': 'application/json'
             }
         });
 
