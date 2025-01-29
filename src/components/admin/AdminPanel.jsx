@@ -142,20 +142,19 @@ const AdminPanel = () => {
   // Category handlers
   const handleCategorySubmit = (e) => {
     e.preventDefault();
-    if (!categoryForm.name || !categoryForm.image) {
-      alert("Category name and image are required!");
+    if (!categoryForm.name) {
+      alert("Category name is required!");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const categoryData = {
-        name: categoryForm.name,
-        description: categoryForm.description,
-        image: reader.result, // This will be converted to byte array in the service
-      };
-
+    const submitData = async (imageData) => {
       try {
+        const categoryData = {
+          name: categoryForm.name,
+          description: categoryForm.description,
+          image: imageData,
+        };
+
         if (editingCategory) {
           await updateCategory(editingCategory.id, categoryData);
         } else {
@@ -176,9 +175,17 @@ const AdminPanel = () => {
     };
 
     if (categoryForm.image instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        submitData(reader.result);
+      };
+      reader.onerror = () => {
+        alert("Error reading file. Please try again.");
+      };
       reader.readAsDataURL(categoryForm.image);
     } else {
-      reader.onloadend();
+      // If no new image is selected, use existing image
+      submitData(categoryForm.image);
     }
   };
 
@@ -200,13 +207,13 @@ const AdminPanel = () => {
       return;
     }
 
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
+    const submitProduct = async (imageData) => {
+      try {
         const productData = {
           name: productForm.name,
           description: productForm.description,
-          image: reader.result,
+          price: productForm.price,
+          image: imageData,
           categoryId: parseInt(productForm.category),
         };
 
@@ -226,18 +233,27 @@ const AdminPanel = () => {
           name: "",
           description: "",
           category: "",
+          price: "",
           image: null,
         });
-      };
-
-      if (productForm.image instanceof File) {
-        reader.readAsDataURL(productForm.image);
-      } else {
-        reader.onloadend();
+      } catch (error) {
+        console.error("Error submitting product:", error);
+        alert("Failed to save product. Please try again.");
       }
-    } catch (error) {
-      console.error("Error submitting product:", error);
-      alert("Failed to save product. Please try again.");
+    };
+
+    if (productForm.image instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        submitProduct(reader.result);
+      };
+      reader.onerror = () => {
+        alert("Error reading file. Please try again.");
+      };
+      reader.readAsDataURL(productForm.image);
+    } else {
+      // If no new image is selected, use existing image
+      submitProduct(productForm.image);
     }
   };
 
@@ -302,17 +318,22 @@ const AdminPanel = () => {
     }
 
     try {
+      setLoading(true);
       for (const file of files) {
         const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            await addProductImage(selectedProduct.id, reader.result);
-          } catch (error) {
-            console.error("Error adding image:", error);
-            alert(`Failed to add image: ${file.name}`);
-          }
-        };
-        reader.readAsDataURL(file);
+        await new Promise((resolve, reject) => {
+          reader.onloadend = async () => {
+            try {
+              await addProductImage(selectedProduct.id, reader.result);
+              resolve();
+            } catch (error) {
+              console.error("Error adding image:", error);
+              reject(error);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       }
 
       // Refresh the images list
@@ -325,6 +346,8 @@ const AdminPanel = () => {
     } catch (error) {
       console.error("Error processing images:", error);
       alert("Error processing images. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
