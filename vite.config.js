@@ -5,4 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/rajshreeenterprises/',
+  server: {
+    historyApiFallback: {
+      rewrites: [
+        { 
+          from: /^\/rajshreeenterprises\/.*/, 
+          to: '/rajshreeenterprises/index.html' 
+        }
+      ]
+    }
+  }
 })

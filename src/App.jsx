@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Navbar from "./components/navbar/Navbar";
 import ProductListing from "./components/productlisting/ProductListing";
 import Home from "./components/home/Home";
@@ -13,7 +18,7 @@ function App() {
       <div>
         <Navbar />
         <Routes>
-          <Route exact path="/" element={<Home />} />
+          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/services" element={<Home />} />
           <Route path="/about" element={<Home />} />
@@ -24,6 +29,10 @@ function App() {
           />
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/admin" element={<AdminPanel />} />
+
+          {/* Add these new routes for handling direct URL access */}
+          <Route path="/admin/*" element={<AdminPanel />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {/* <Footer /> */}
       </div>
