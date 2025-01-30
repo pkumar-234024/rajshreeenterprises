@@ -22,6 +22,10 @@ import {
 } from "../../data/productImagesData";
 import Loader from "../common/Loader";
 import { FaRing, FaCross, FaBaby, FaImages } from "react-icons/fa";
+import {
+  getAdminCredentials,
+  updateAdminCredentials,
+} from "../../data/adminCredentials";
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState("category");
@@ -40,6 +44,12 @@ const AdminPanel = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showProductImagesModal, setShowProductImagesModal] = useState(false);
   const [selectedProductImages, setSelectedProductImages] = useState([]);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [credentialsForm, setCredentialsForm] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -523,6 +533,27 @@ const AdminPanel = () => {
     }
   };
 
+  const handleCredentialsSubmit = (e) => {
+    e.preventDefault();
+
+    if (credentialsForm.password !== credentialsForm.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    try {
+      updateAdminCredentials({
+        username: credentialsForm.username,
+        password: credentialsForm.password,
+      });
+      alert("Admin credentials updated successfully!");
+      setShowSettingsModal(false);
+    } catch (error) {
+      console.error("Error updating credentials:", error);
+      alert("Failed to update credentials");
+    }
+  };
+
   return (
     <div className="admin-panel">
       <div className="admin-content">
@@ -971,6 +1002,82 @@ const AdminPanel = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {showSettingsModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2>Admin Settings</h2>
+                <button
+                  type="button"
+                  className="close-btn"
+                  onClick={() => setShowSettingsModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <form onSubmit={handleCredentialsSubmit} className="admin-form">
+                <div className="form-group">
+                  <label htmlFor="adminUsername">Username</label>
+                  <input
+                    type="text"
+                    id="adminUsername"
+                    value={credentialsForm.username}
+                    onChange={(e) =>
+                      setCredentialsForm({
+                        ...credentialsForm,
+                        username: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="adminPassword">New Password</label>
+                  <input
+                    type="password"
+                    id="adminPassword"
+                    value={credentialsForm.password}
+                    onChange={(e) =>
+                      setCredentialsForm({
+                        ...credentialsForm,
+                        password: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={credentialsForm.confirmPassword}
+                    onChange={(e) =>
+                      setCredentialsForm({
+                        ...credentialsForm,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-actions">
+                  <button type="submit" className="save-btn">
+                    Update Credentials
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setShowSettingsModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

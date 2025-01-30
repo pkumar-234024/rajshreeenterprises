@@ -838,3 +838,28 @@
   object-fit: cover;
   display: block;
 }
+
+.settings-btn {
+    background-color: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 1rem;
+}
+
+.settings-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+}
