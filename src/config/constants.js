@@ -7,7 +7,7 @@ export const API_BASE_URL = "https://rajshreepress.runasp.net";
 export const API_ENDPOINTS = {
     CATEGORIES: `${API_BASE_URL}/ProductCategories`,
     PRODUCTS: `${API_BASE_URL}/Product`,
-    PRODUCT_IMAGES: `${API_BASE_URL}/ProductImages`,
+    PRODUCT_IMAGES: 'http://localhost:57679/ProductImage',
 };
 
 // Common Headers

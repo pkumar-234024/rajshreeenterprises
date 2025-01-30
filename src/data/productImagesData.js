@@ -15,16 +15,24 @@ const base64ToByteArray = (base64String) => {
 export const getProductImages = async (productId) => {
     try {
         const response = await fetch(`${API_ENDPOINTS.PRODUCT_IMAGES}/${productId}`, {
-            headers: API_HEADERS
+            headers: {
+                'Accept': 'application/json'
+            }
         });
+        
         if (!response.ok) {
             throw new Error('Failed to fetch product images');
         }
+        
         const data = await response.json();
-        return data.map(image => ({
-            id: image.id,
-            image: `${IMAGE_CONFIG.BASE64_PREFIX}${image.productsImage}`,
-            productId: image.productId
+        return data.map(img => ({
+            id: img.id,
+            image: img.productsImage ? 
+                (img.productsImage.startsWith('data:image') ? 
+                    img.productsImage : 
+                    `data:image/jpeg;base64,${img.productsImage}`
+                ) : null,
+            productId: img.productId
         }));
     } catch (error) {
         console.error('Error fetching product images:', error);
@@ -33,30 +41,35 @@ export const getProductImages = async (productId) => {
 };
 
 // Add a new image to a product
-export const addProductImage = async (productId, imageData) => {
+export const addProductImage = async (productId, base64Data) => {
     try {
-        const dataToSend = {
-            Id: 0,
-            ProductsImage: imageData.split(',')[1], // Remove data:image/jpeg;base64, prefix
-            ProductId: parseInt(productId)
-        };
-
-        const response = await fetch(API_ENDPOINTS.PRODUCT_IMAGES, {
+        debugger;
+        var b = JSON.stringify({
+            ProductId: parseInt(productId),
+            Image: base64Data // Send the base64 data directly without any prefix
+        });
+        var d = `${API_ENDPOINTS.PRODUCT_IMAGES}`;
+        const response = await fetch(`${API_ENDPOINTS.PRODUCT_IMAGES}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
             },
-            body: JSON.stringify(dataToSend),
+            body: JSON.stringify({
+                ProductId: parseInt(productId),
+                ProductsImage: base64Data // Send the base64 data directly without any prefix
+            })
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('Create response error:', errorData);
-            throw new Error('Failed to add product image');
+            console.error('Upload response error:', errorData);
+            throw new Error('Failed to upload image');
         }
+
         return await response.json();
     } catch (error) {
-        console.error('Error adding product image:', error);
+        console.error('Error uploading image:', error);
         throw error;
     }
 };
@@ -91,24 +104,24 @@ export const updateProductImage = async (id, imageData, productId) => {
 };
 
 // Delete a product image
-export const deleteProductImage = async (id) => {
+export const deleteProductImage = async (imageId) => {
     try {
-        const response = await fetch(`${API_ENDPOINTS.PRODUCT_IMAGES}/${id}`, {
+        const response = await fetch(`${API_ENDPOINTS.PRODUCT_IMAGES}/${imageId}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         });
 
         if (!response.ok) {
             const errorData = await response.json();
             console.error('Delete response error:', errorData);
-            throw new Error(`Failed to delete product image: ${JSON.stringify(errorData)}`);
+            throw new Error('Failed to delete image');
         }
 
         return true;
     } catch (error) {
-        console.error('Error deleting product image:', error);
+        console.error('Error deleting image:', error);
         throw error;
     }
 }; 
