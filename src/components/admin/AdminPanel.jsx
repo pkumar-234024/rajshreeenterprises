@@ -38,6 +38,8 @@ const AdminPanel = () => {
   const [tabLoading, setTabLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [showProductImagesModal, setShowProductImagesModal] = useState(false);
+  const [selectedProductImages, setSelectedProductImages] = useState([]);
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -507,6 +509,20 @@ const AdminPanel = () => {
     }
   };
 
+  const handleProductCardClick = async (product) => {
+    try {
+      setActionLoading(true);
+      const images = await getProductImages(product.id);
+      setSelectedProduct(product);
+      setSelectedProductImages(images);
+      setShowProductImagesModal(true);
+    } catch (error) {
+      console.error("Error loading product images:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="admin-panel">
       <div className="admin-content">
@@ -562,7 +578,11 @@ const AdminPanel = () => {
           <div className="items-list">
             {products.length > 0 ? (
               products.map((product) => (
-                <div key={`product-${product.id}`} className="item-card">
+                <div
+                  key={`product-${product.id}`}
+                  className="item-card"
+                  onClick={() => handleProductCardClick(product)}
+                >
                   <img
                     src={product.image}
                     alt={product.name}
@@ -579,7 +599,10 @@ const AdminPanel = () => {
                       <p className="product-price">₹{product.price}</p>
                     )}
                   </div>
-                  <div className="item-actions">
+                  <div
+                    className="item-actions"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       className="edit-btn"
                       onClick={() => handleEditProduct(product)}
@@ -906,6 +929,47 @@ const AdminPanel = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showProductImagesModal && (
+          <div className="modal-overlay">
+            <div className="modal-content product-images-modal">
+              <div className="modal-header">
+                <h2>{selectedProduct?.name} - All Images</h2>
+                <button
+                  type="button"
+                  className="close-btn"
+                  onClick={() => setShowProductImagesModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="product-images-grid">
+                {selectedProductImages.length > 0 ? (
+                  selectedProductImages.map((image, index) => (
+                    <div
+                      key={`image-${image.id || index}`}
+                      className="product-image-item"
+                    >
+                      <img
+                        src={image.image}
+                        alt={`${selectedProduct?.name} - Image ${index + 1}`}
+                        onError={(e) => {
+                          console.error("Image failed to load:", image);
+                          e.target.onerror = null;
+                          e.target.src = "/placeholder-image.jpg";
+                        }}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-images">
+                    <p>No additional images available for this product</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

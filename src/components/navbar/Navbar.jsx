@@ -53,7 +53,7 @@ const Navbar = () => {
             </li>
           </ul>
         </nav>
-        <button
+        {/* <button
           onClick={handleAdminClick}
           style={{
             padding: "8px 16px",
@@ -66,7 +66,7 @@ const Navbar = () => {
           }}
         >
           Admin Panel
-        </button>
+        </button> */}
       </div>
     </header>
   );

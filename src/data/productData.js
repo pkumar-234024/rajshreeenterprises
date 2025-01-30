@@ -15,12 +15,15 @@ export const getAllProducts = async (categoryId) => {
             throw new Error('Failed to fetch products');
         }
         const data = await response.json();
+        debugger;
+        console.log(data);
         return data.map(product => ({
             id: product.id,
             name: product.productName,
             description: product.productsDescription,
             image: `${IMAGE_CONFIG.BASE64_PREFIX}${product.productsImage}`,
-            categoryId: product.productCategoryId
+            categoryId: product.productCategoryId,
+            price: product.productPrice
         }));
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -36,7 +39,8 @@ export const createProduct = async (productData) => {
             ProductName: productData.name,
             ProductsDescription: productData.description,
             ProductsImage: productData.image.split(',')[1],
-            ProductCategoryId: parseInt(productData.categoryId)
+            ProductCategoryId: parseInt(productData.categoryId),
+            ProductPrice: parseFloat(productData.price)
         };
 
         const response = await fetch(API_URL, {

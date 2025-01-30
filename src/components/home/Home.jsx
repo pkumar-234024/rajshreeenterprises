@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "../../data/productData";
+import { getProductImages } from "../../data/productImagesData";
 import "./Home.css";
 import Loader from "../common/Loader";
 // Import icons from react-icons
@@ -16,6 +17,10 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(1); // Default to Wedding (ID: 1)
   const [isLoading, setIsLoading] = useState(true);
+  // Add these new states
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productImages, setProductImages] = useState([]);
 
   // Static categories with icons
   const staticCategories = [
@@ -53,8 +58,10 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        debugger;
         setIsLoading(true);
         const productsData = await getAllProducts(selectedCategory);
+        console.log(productsData);
         setProducts(productsData);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -70,6 +77,21 @@ const Home = () => {
   // Handle category selection
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
+  };
+
+  // Add this new function to handle product click
+  const handleProductClick = async (product) => {
+    try {
+      setIsLoading(true);
+      const images = await getProductImages(product.id);
+      setSelectedProduct(product);
+      setProductImages(images);
+      setShowProductModal(true);
+    } catch (error) {
+      console.error("Error loading product images:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -98,15 +120,19 @@ const Home = () => {
 
       {/* Products Grid */}
       <div className="products-section">
-        <h2 className="products-title">
+        {/* <h2 className="products-title">
           {`Products in ${
             staticCategories.find((cat) => cat.id === selectedCategory)?.name
           }`}
-        </h2>
+        </h2> */}
         <div className="products-grid">
           {products.length > 0 ? (
             products.map((product) => (
-              <div key={`product-${product.id}`} className="product-card">
+              <div
+                key={`product-${product.id}`}
+                className="product-card"
+                onClick={() => handleProductClick(product)}
+              >
                 <img
                   src={product.image}
                   alt={product.name}
@@ -120,7 +146,7 @@ const Home = () => {
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   {product.price && (
-                    <p className="product-price">₹{product.price}</p>
+                    <p className="product-price">₹{product.price} /card</p>
                   )}
                 </div>
               </div>
@@ -132,6 +158,55 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      {/* Product Images Modal */}
+      {showProductModal && selectedProduct && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowProductModal(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{selectedProduct.name}</h2>
+              <button
+                className="close-btn"
+                onClick={() => setShowProductModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="product-images-grid">
+              {/* Show main product image first */}
+              <div className="product-image-item">
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/placeholder-image.jpg";
+                  }}
+                />
+              </div>
+              {/* Show additional images */}
+              {productImages.map((image, index) => (
+                <div
+                  key={`image-${image.id || index}`}
+                  className="product-image-item"
+                >
+                  <img
+                    src={image.image}
+                    alt={`${selectedProduct.name} - Image ${index + 1}`}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder-image.jpg";
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
